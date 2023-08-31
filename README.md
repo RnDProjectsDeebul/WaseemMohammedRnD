@@ -42,3 +42,6 @@ This repository provides instructions on how to set up a Gazebo simulation, crea
     ```
 
 ---
+
+# Reference 
+[1] [LiDAR-based Indoor Localization with Optimal Particle Filters using Surface Normal Constraints](https://ieeexplore.ieee.org/document/10160274)
