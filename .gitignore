@@ -171,3 +171,4 @@ cython_debug/
 !/normal_estimation/
 !/simulation_mapping/
 !/velodyne_simulator/
+!/project_proposal/
