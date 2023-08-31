@@ -7,9 +7,7 @@ The core objectives of this R&D project encompass both theoretical and practical
 # Repository Usage
 This repository provides comprehensive instructions on setting up and running optimal particle filter in 3D environment within the Gazebo simulation. It also covers the creation of a 3D model, the mapping process, and the integration of noisy odometry for precise localization, all utilizing the Robot Operating System (ROS).
 
-# Gazebo Simulation and Mapping README
-
-This repository provides instructions on how to set up a Gazebo simulation, create a 3D model, perform mapping, and add noisy odometry for localization using ROS (Robot Operating System).
+## Gazebo Simulation and Mapping
 
 ## Data Collection
 
