@@ -57,7 +57,7 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const sensor_ms
         tf::StampedTransform map_basefootprint_transform, basefootprint_lidar_transform;
         // tf_listener_ptr->lookupTransform("/map", "/base_footprint2", cloud_msg->header.stamp, map_basefootprint_transform);
         tf_listener_ptr->lookupTransform("/map", "/base_footprint2", ros::Time(0), map_basefootprint_transform);
-        tf_listener_ptr->lookupTransform("/base_footprint", "/rslidar", ros::Time(0), basefootprint_lidar_transform);
+        tf_listener_ptr->lookupTransform("/base_footprint", "/base_scan", ros::Time(0), basefootprint_lidar_transform); //rslidar
         tf::Transform map_lidar_transform = map_basefootprint_transform * basefootprint_lidar_transform;
     
         tf::Vector3 lidar_pos = map_lidar_transform.getOrigin();
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     message_filters::TimeSynchronizer<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> sync(cloud_sub, normals_cloud_sub, 10);
     sync.registerCallback(boost::bind(&cloudCb, _1, _2));
 
-    ros::Subscriber pose_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth_pose", 100, poseCb);
+    ros::Subscriber pose_sub = nh.subscribe<nav_msgs::Odometry>("/odom", 100, poseCb); //ground_truth_pose
     map_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/map_cloud", 1);
     map_normals_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/map_normals_cloud", 1);
 
