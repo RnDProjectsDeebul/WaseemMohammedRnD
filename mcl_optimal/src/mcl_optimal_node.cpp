@@ -44,45 +44,6 @@ void initPoseCb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_s
 
 void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, OptimalParticleFilter &pf_optimal){
 
-
-
-// #include <sensor_msgs/LaserScan.h>
-// #include <pcl/features/normal_3d.h>
-
-// void laserScanCb(const sensor_msgs::LaserScan::ConstPtr& scan_msg, OptimalParticleFilter &pf_optimal) {
-//     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-
-//     // Convert 2D LaserScan to 2D Point Cloud (XY plane)
-//     for (size_t i = 0; i < scan_msg->ranges.size(); ++i) {
-//         float range = scan_msg->ranges[i];
-//         float angle = scan_msg->angle_min + i * scan_msg->angle_increment;
-    
-//         pcl::PointXYZ point;
-//         point.x = range * cos(angle);
-//         point.y = range * sin(angle);
-//         point.z = 0.0; // Since it's a 2D laser scan, set the z-coordinate to 0
-
-//         cloud->push_back(point);
-//     }
-
-//     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-//     ne.setInputCloud(cloud);
-//     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-//     ne.setSearchMethod(tree);
-//     pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//     ne.setKSearch(10);
-//     ne.compute(*normals);
-
-//     // Combine the points and normals into a single PointCloudNormal object
-//     PointCloudNormal::Ptr cloud_with_normals(new PointCloudNormal());
-//     pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
-
-// }
-
-
-
-
-
     pcl::PCLPointCloud2 pcl_pc2;
     pcl_conversions::toPCL(*cloud_msg, pcl_pc2);
     PointCloudNormal::Ptr cloud (new PointCloudNormal ());
