@@ -55,9 +55,8 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const sensor_ms
 
     try {
         tf::StampedTransform map_basefootprint_transform, basefootprint_lidar_transform;
-        // tf_listener_ptr->lookupTransform("/map", "/base_footprint2", cloud_msg->header.stamp, map_basefootprint_transform);
-        tf_listener_ptr->lookupTransform("/map", "/base_footprint2", ros::Time(0), map_basefootprint_transform);
-        tf_listener_ptr->lookupTransform("/base_footprint", "/base_scan", ros::Time(0), basefootprint_lidar_transform); //rslidar
+        tf_listener_ptr->lookupTransform("/map", "/base_footprint2", cloud_msg->header.stamp, map_basefootprint_transform);
+        tf_listener_ptr->lookupTransform("/base_footprint", "/rslidar", ros::Time(0), basefootprint_lidar_transform);
         tf::Transform map_lidar_transform = map_basefootprint_transform * basefootprint_lidar_transform;
     
         tf::Vector3 lidar_pos = map_lidar_transform.getOrigin();
@@ -81,7 +80,7 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const sensor_ms
             voxel_grid_filter.setInputCloud(map_cloud);
             voxel_grid_filter.filter(*map_cloud_downsampled);
      
-            std_msgs::Header map_cloud_pub_header = cloud_msg->header;  
+            std_msgs::Header map_cloud_pub_header = cloud_msg->header;
             map_cloud_pub_header.frame_id = "map";
             publishCloud(map_cloud_downsampled, map_cloud_pub, map_cloud_pub_header); 
 
@@ -90,8 +89,7 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const sensor_ms
             PointCloudNormal::Ptr transformed_normals_cloud_downsampled (new PointCloudNormal ());
             voxel_grid_filter_normals.setInputCloud(transformed_normals_cloud);
             voxel_grid_filter_normals.filter(*transformed_normals_cloud_downsampled);
-            
-            
+     
             *map_normals_cloud += *transformed_normals_cloud_downsampled;
             PointCloudNormal::Ptr map_normals_cloud_downsampled (new PointCloudNormal ());
             voxel_grid_filter_normals.setInputCloud(map_normals_cloud);
@@ -101,9 +99,6 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const sensor_ms
             map_normals_cloud_pub_header.frame_id = "map";
             publishCloud(map_normals_cloud_downsampled, map_normals_cloud_pub, map_normals_cloud_pub_header); 
         }
-
-        // std::cout << "size of normal"<<map_normals_cloud->size()<<std::endl;
-        // std::cout << "size of map"<<map_cloud->size()<<std::endl;
     } catch (tf::TransformException ex) {
         ROS_ERROR("%s",ex.what());
     } 
@@ -126,7 +121,7 @@ int main(int argc, char** argv)
     message_filters::TimeSynchronizer<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> sync(cloud_sub, normals_cloud_sub, 10);
     sync.registerCallback(boost::bind(&cloudCb, _1, _2));
 
-    ros::Subscriber pose_sub = nh.subscribe<nav_msgs::Odometry>("/odom", 100, poseCb); //ground_truth_pose
+    ros::Subscriber pose_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth_pose", 100, poseCb);
     map_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/map_cloud", 1);
     map_normals_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/map_normals_cloud", 1);
 
@@ -136,8 +131,6 @@ int main(int argc, char** argv)
         ros::spinOnce();
         rate.sleep();
     }
-
-
 
     PointCloudNormal::Ptr map_normals_cloud_downsampled (new PointCloudNormal ());
     voxel_grid_filter_normals.setInputCloud(map_normals_cloud);
@@ -151,4 +144,3 @@ int main(int argc, char** argv)
      
     return 0;
 }
-
