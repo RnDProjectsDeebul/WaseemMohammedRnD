@@ -35,8 +35,6 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
         ros::Duration(1.0))) {
         return;
     }
-    ROS_INFO("hehee");
-
     sensor_msgs::PointCloud cloud;
     projector_.transformLaserScanToPointCloud("/base_footprint", *scan_in, cloud, listener_);
 
@@ -48,9 +46,16 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
         pcl::PointXYZ pcl_point;
         pcl_point.x = point.x;
         pcl_point.y = point.y;
-        pcl_point.z = point.z;
-        pcl_cloud->push_back(pcl_point);
+        pcl_point.z = point.z;  // Keep the original Z value
+
+        // Create multiple copies of the point with different Z values
+        for (int i = 0; i < 15; ++i) {
+            pcl::PointXYZ pcl_copy = pcl_point;
+            pcl_copy.z = pcl_point.z * (i + 1);  // Adjust the Z value for each copy
+            pcl_cloud->push_back(pcl_copy);
+        }
     }
+    std::cout << *pcl_cloud << std::endl;
     publishCloud(pcl_cloud, scan_cloud_pub, scan_in->header);
 
     // Create the normal estimation class
