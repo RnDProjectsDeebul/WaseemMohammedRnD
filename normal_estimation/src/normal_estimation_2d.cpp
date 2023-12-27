@@ -48,10 +48,9 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
         pcl_point.y = point.y;
         pcl_point.z = point.z;  // Keep the original Z value
 
-        // Create multiple copies of the point with different Z values
         for (int i = 0; i < 15; ++i) {
             pcl::PointXYZ pcl_copy = pcl_point;
-            pcl_copy.z = pcl_point.z * (i + 1);  // Adjust the Z value for each copy
+            pcl_copy.z = pcl_point.z * (i + 1); 
             pcl_cloud->push_back(pcl_copy);
         }
     }

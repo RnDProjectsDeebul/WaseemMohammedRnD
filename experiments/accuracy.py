@@ -12,7 +12,7 @@ import termios
 class PoseComparator:
     def __init__(self):
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
-        self.pose_sub = rospy.Subscriber("/robot_pose_transformed", Odometry, self.pose_callback)
+        self.pose_sub = rospy.Subscriber("/robot_pose", PoseWithCovarianceStamped, self.pose_callback)
         self.latest_odom = None
         self.latest_pose = None
         self.record_data = False
