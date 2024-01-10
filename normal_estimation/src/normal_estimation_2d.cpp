@@ -47,12 +47,13 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
         pcl_point.x = point.x;
         pcl_point.y = point.y;
         pcl_point.z = point.z;  // Keep the original Z value
+        pcl_cloud->push_back(pcl_point);
 
-        for (int i = 0; i < 15; ++i) {
-            pcl::PointXYZ pcl_copy = pcl_point;
-            pcl_copy.z = pcl_point.z * (i + 1); 
-            pcl_cloud->push_back(pcl_copy);
-        }
+        // for (int i = 0; i < 15; ++i) {
+        //     pcl::PointXYZ pcl_copy = pcl_point;
+        //     pcl_copy.z = pcl_point.z * (i + 1); 
+        //     pcl_cloud->push_back(pcl_copy);
+        // }
     }
     std::cout << *pcl_cloud << std::endl;
     publishCloud(pcl_cloud, scan_cloud_pub, scan_in->header);
