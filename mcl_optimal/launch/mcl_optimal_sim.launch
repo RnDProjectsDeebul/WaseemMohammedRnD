@@ -4,7 +4,7 @@
 
     <arg name="map" value="$(optenv MAP sim_ground_truth_normals_map)"/>
     <arg name="map_file" default="$(find mcl_optimal)/maps/$(arg map).pcd"/>
-     <arg name="num_particles" default="500" /> <!-- 1, 3, 50, 100, 250, 500 -->
+     <arg name="num_particles" default="1" /> <!-- 1, 3, 50, 100, 250, 500 -->
     <arg name="lf_obs_std_dev" default="0.02" />
     <arg name="hf_obs_std_dev" default="0.02" />
     
