@@ -29,7 +29,6 @@ void cloudCb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     PointCloud::Ptr cloud_in (new PointCloud ());
     pcl::fromPCLPointCloud2(pcl_pc2, *cloud_in);
 
-
     reorderPointcloud(cloud_in);
 
     PointCloudNormal::Ptr cloud_normals (new PointCloudNormal ());
