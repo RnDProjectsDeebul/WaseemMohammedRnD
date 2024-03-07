@@ -120,7 +120,7 @@ void getRosParams(ros::NodeHandle &nh) {
     nh.param("odom_rot_var_per_rad", pf_params.odom_rot_var_per_rad, 0.1f);         // 360deg -> std.dev.=45deg
     nh.param("odom_rot_var_per_m", pf_params.odom_rot_var_per_m, 0.06f);            // 10m -> std.dev.=45deg
  
-    nh.param("num_observations", pf_params.num_observations, 300);
+    nh.param("num_observations", pf_params.num_observations, 150);
     nh.param("lf_obs_std_dev", pf_params.lf_obs_std_dev, 0.02f);                    // low-fidelity std_dev
     nh.param("hf_obs_std_dev", pf_params.hf_obs_std_dev, 0.02f);                    // high-fidelitys std_dev
     nh.param("max_obs_nn_dist", pf_params.max_obs_nn_dist, 0.3f);

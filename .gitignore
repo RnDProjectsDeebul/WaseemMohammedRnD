@@ -172,3 +172,4 @@ cython_debug/
 !/simulation_mapping/
 !/velodyne_simulator/
 !/project_proposal/
+!/experiments/
