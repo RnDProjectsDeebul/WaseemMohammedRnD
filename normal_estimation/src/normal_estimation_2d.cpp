@@ -78,10 +78,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
     // Combine the points and normals into a single PointCloudNormal object
     PointCloudNormal::Ptr cloud_with_normals(new PointCloudNormal());
     pcl::concatenateFields(*pcl_cloud, *cloud_normals, *cloud_with_normals);
-    ROS_INFO("hehee");
     
-    ROS_INFO("IN!!!!1:");
-    // Print pcl_cloud (point coordinates)
     std::cout << "pcl_cloud:\n";
     for (size_t i = 0; i < pcl_cloud->points.size(); ++i) {
         std::cout << "Point " << i << ": "
@@ -90,7 +87,6 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
                   << pcl_cloud->points[i].z << ")\n";
     }
     
-    // Print cloud_normals (normal vectors)
     std::cout << "\ncloud_normals:\n";
     for (size_t i = 0; i < cloud_normals->points.size(); ++i) {
         std::cout << "Normal " << i << ": "
@@ -99,7 +95,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
                   << cloud_normals->points[i].normal_z << ")\n";
     }
     
-    // Print cloud_with_normals (combined cloud)
+
     std::cout << "\ncloud_with_normals:\n";
     for (size_t i = 0; i < cloud_with_normals->points.size(); ++i) {
         std::cout << "Point " << i << ": "
