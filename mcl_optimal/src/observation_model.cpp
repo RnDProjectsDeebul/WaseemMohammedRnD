@@ -118,24 +118,12 @@ void ObservationModel::initializeMapClouds(PointCloudNormal::Ptr map_cloud) {
         //if (fabs(pt.normal_z) < 0.1){                   // <6deg tilt/pitch
         if (std::isfinite(pt.normal_z)) {
             pt.curvature = pt.x*pt.normal_x + pt.y*pt.normal_y; // + pt.z*pt.normal_z;
-            if (pt.normal_x > 0.0){ pos_x_map_cloud_->points.push_back(pt); }
-            if (pt.normal_x < -0.0){ neg_x_map_cloud_->points.push_back(pt); }
-            if (pt.normal_y > 0.0){ pos_y_map_cloud_->points.push_back(pt); }
-            if (pt.normal_y < -0.0){ neg_y_map_cloud_->points.push_back(pt); }
+            pos_x_map_cloud_->points.push_back(pt);
         }
     }
     std::cout << "pos_x_map_cloud_: " << pos_x_map_cloud_->points.size() << std::endl;
-    std::cout << "neg_x_map_cloud_: " << neg_x_map_cloud_->points.size() << std::endl;
-    std::cout << "pos_y_map_cloud_: " << pos_y_map_cloud_->points.size() << std::endl;
-    std::cout << "neg_y_map_cloud_: " << neg_y_map_cloud_->points.size() << std::endl;
     pos_x_map_octree_.setInputCloud(pos_x_map_cloud_);
     pos_x_map_octree_.addPointsFromInputCloud();
-    neg_x_map_octree_.setInputCloud(neg_x_map_cloud_);
-    neg_x_map_octree_.addPointsFromInputCloud();
-    pos_y_map_octree_.setInputCloud(pos_y_map_cloud_);
-    pos_y_map_octree_.addPointsFromInputCloud();
-    neg_y_map_octree_.setInputCloud(neg_y_map_cloud_);
-    neg_y_map_octree_.addPointsFromInputCloud();  
 }
 
 void ObservationModel::computeAndAddCorrespondence(PointNormal& scan_pt, PointNormal& scan_pt_transformed, OctreeNormal& octree_map
@@ -149,6 +137,7 @@ void ObservationModel::computeAndAddCorrespondence(PointNormal& scan_pt, PointNo
         if (cos_normal_ang > min_cos_nn_normal_angle_diff_) { 
             float scan_pt_dist = sqrt(scan_pt.x * scan_pt.x + scan_pt.y * scan_pt.y); 
             bool reliable_for_yaw_estimation = fabs((scan_pt.x * scan_pt.normal_x + scan_pt.y * scan_pt.normal_y)/scan_pt_dist) < 0.98; // If ang > 0.2rad
+            // std::cout << reliable_for_yaw_estimation << " , " << scan_pt_dist << std::endl;
             correspondences.push_back(Correspondence{scan_pt, scan_pt_transformed, map_pt, reliable_for_yaw_estimation}); 
         }
     }
@@ -163,13 +152,13 @@ void ObservationModel::getCorrespondences(PointCloudNormal::Ptr cloud, PointClou
                 if (scan_pt_transformed.normal_x > 0){
                     computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
                 } else {
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, neg_x_map_octree_, neg_x_map_cloud_, correspondences);
+                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
                 }
             } else {
                 if (scan_pt_transformed.normal_y > 0){
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_y_map_octree_, pos_y_map_cloud_, correspondences);
+                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
                 } else {
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, neg_y_map_octree_, neg_y_map_cloud_, correspondences);
+                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
                 }
             }
         }
