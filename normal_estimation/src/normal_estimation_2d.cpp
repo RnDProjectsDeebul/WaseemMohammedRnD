@@ -70,10 +70,17 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
 
     // Set the radius for normal estimation
-    ne.setRadiusSearch(0.3); //TODO know how it effects and fix it
+    ne.setRadiusSearch(5.0); //TODO know how it effects and fix it
 
     // Compute the normals
     ne.compute(*cloud_normals);
+
+        // Adjust the normals to face perpendicular to the z-axis
+    for (size_t i = 0; i < cloud_normals->points.size(); ++i) {
+        // cloud_normals->points[i].normal_x = 0.0;
+        cloud_normals->points[i].normal_y = 1.0;
+        cloud_normals->points[i].normal_z = 0.0; // Facing perpendicular to the z-axis
+    }
 
     // Combine the points and normals into a single PointCloudNormal object
     PointCloudNormal::Ptr cloud_with_normals(new PointCloudNormal());
