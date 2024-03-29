@@ -8,10 +8,13 @@
 #include <pcl/search/kdtree.h>
 #include "pcl_ros/point_cloud.h"
 #include <normal_estimation/normal_estimation.h>
+#include <normal_estimation/NormalList.h>
 
 laser_geometry::LaserProjection projector_;
 ros::Publisher cloud_pub;
 ros::Publisher scan_cloud_pub;
+
+pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
 
 template<typename T>
 void publishCloud(T& cloud, ros::Publisher& publisher, std_msgs::Header header){
@@ -20,6 +23,40 @@ void publishCloud(T& cloud, ros::Publisher& publisher, std_msgs::Header header){
     output.header.frame_id = header.frame_id;
     output.header.stamp = header.stamp;
     publisher.publish(output);
+}
+
+void publishNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pcl_cloud, const std_msgs::Header& header) {
+    // Publish cloud with normals
+    PointCloudNormal::Ptr cloud_with_normals(new PointCloudNormal());
+    std::cout << "\npcl_cloud: " << pcl_cloud->points.size() <<"\n";
+    std::cout << "\ncloud_normals: " << cloud_normals->points.size() <<"\n";
+    pcl::concatenateFields(*pcl_cloud, *cloud_normals, *cloud_with_normals);
+    publishCloud(cloud_with_normals, cloud_pub, header);
+    std::cout << "\ncloud_with_normals:\n";
+    for (size_t i = 0; i < cloud_with_normals->points.size(); ++i) {
+        std::cout << "Point " << i << ": "
+                  << "(" << cloud_with_normals->points[i].x << ", "
+                  << cloud_with_normals->points[i].y << ", "
+                  << cloud_with_normals->points[i].z << ") - "
+                  << "Normal: "
+                  << "(" << cloud_with_normals->points[i].normal_x << ", "
+                  << cloud_with_normals->points[i].normal_y << ", "
+                  << cloud_with_normals->points[i].normal_z << ")\n";
+    }
+}
+
+void normalsCallback(const normal_estimation::NormalList::ConstPtr& normals_msg)  {
+    // Clear previous normals
+    cloud_normals->clear();
+
+    // Fill in the received normal vectors
+    for (size_t i = 0; i < normals_msg->x.size(); ++i) {
+        pcl::Normal normal;
+        normal.normal_x = normals_msg->x[i];
+        normal.normal_y = normals_msg->y[i];
+        normal.normal_z = 0.0; // Assuming 2D, so setting z component to 0
+        cloud_normals->push_back(normal);
+    }
 }
 
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
@@ -48,77 +85,11 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
         pcl_point.y = point.y;
         pcl_point.z = point.z;  // Keep the original Z value
         pcl_cloud->push_back(pcl_point);
-
-        // for (int i = 0; i < 15; ++i) {
-        //     pcl::PointXYZ pcl_copy = pcl_point;
-        //     pcl_copy.z = pcl_point.z * (i + 1); 
-        //     pcl_cloud->push_back(pcl_copy);
-        // }
     }
     std::cout << *pcl_cloud << std::endl;
+    std::cout << "\npcl_cloud: " << pcl_cloud->points.size() <<"\n";
     publishCloud(pcl_cloud, scan_cloud_pub, scan_in->header);
-
-    // Create the normal estimation class
-    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-    ne.setInputCloud(pcl_cloud);
-
-    // Create a KdTree for normal estimation
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-    ne.setSearchMethod(tree);
-
-    // Output dataset for normals
-    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-
-    // Set the radius for normal estimation
-    ne.setRadiusSearch(5.0); //TODO know how it effects and fix it
-
-    // Compute the normals
-    ne.compute(*cloud_normals);
-
-        // Adjust the normals to face perpendicular to the z-axis
-    for (size_t i = 0; i < cloud_normals->points.size(); ++i) {
-        // cloud_normals->points[i].normal_x = 0.0;
-        cloud_normals->points[i].normal_y = 1.0;
-        cloud_normals->points[i].normal_z = 0.0; // Facing perpendicular to the z-axis
-    }
-
-    // Combine the points and normals into a single PointCloudNormal object
-    PointCloudNormal::Ptr cloud_with_normals(new PointCloudNormal());
-    pcl::concatenateFields(*pcl_cloud, *cloud_normals, *cloud_with_normals);
-    
-    std::cout << "pcl_cloud:\n";
-    for (size_t i = 0; i < pcl_cloud->points.size(); ++i) {
-        std::cout << "Point " << i << ": "
-                  << "(" << pcl_cloud->points[i].x << ", "
-                  << pcl_cloud->points[i].y << ", "
-                  << pcl_cloud->points[i].z << ")\n";
-    }
-    
-    std::cout << "\ncloud_normals:\n";
-    for (size_t i = 0; i < cloud_normals->points.size(); ++i) {
-        std::cout << "Normal " << i << ": "
-                  << "(" << cloud_normals->points[i].normal_x << ", "
-                  << cloud_normals->points[i].normal_y << ", "
-                  << cloud_normals->points[i].normal_z << ")\n";
-    }
-    
-
-    std::cout << "\ncloud_with_normals:\n";
-    for (size_t i = 0; i < cloud_with_normals->points.size(); ++i) {
-        std::cout << "Point " << i << ": "
-                  << "(" << cloud_with_normals->points[i].x << ", "
-                  << cloud_with_normals->points[i].y << ", "
-                  << cloud_with_normals->points[i].z << ") - "
-                  << "Normal: "
-                  << "(" << cloud_with_normals->points[i].normal_x << ", "
-                  << cloud_with_normals->points[i].normal_y << ", "
-                  << cloud_with_normals->points[i].normal_z << ")\n";
-    }
-
-
-    publishCloud(cloud_with_normals, cloud_pub, scan_in->header);
-
-
+    publishNormals(pcl_cloud, scan_in->header);
 
 }
 
@@ -128,6 +99,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     ros::Subscriber scan_sub = nh.subscribe("/scan", 1, scanCallback);
+    ros::Subscriber normals_sub = nh.subscribe("/normals", 1, normalsCallback);
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/lidar_point_normals", 1);
     scan_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/rslidar_points", 1); 
 
