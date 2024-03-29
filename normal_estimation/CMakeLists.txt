@@ -221,5 +221,5 @@ target_link_libraries(normal_estimation_node ${catkin_LIBRARIES})
 add_executable(approx_normal_estimation_node src/approx_normal_estimation_node.cpp src/approx_normal_estimation.cpp) 
 target_link_libraries(approx_normal_estimation_node ${catkin_LIBRARIES}) 
 
-add_executable(normal_estimation_2d src/normal_estimation_2d src/normal_estimation.cpp src/Normal2dEstimation.cpp src/PCA2D.cpp) 
+add_executable(normal_estimation_2d src/normal_estimation_2d src/normal_estimation.cpp) 
 target_link_libraries(normal_estimation_2d ${catkin_LIBRARIES}) 
