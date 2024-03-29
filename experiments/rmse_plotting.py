@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 
 # Sample data for two sets of points
 optimal_x = [1, 3, 50, 100, 250, 500]
-optimal_y = [0.07602, 0.07727, 0.06480, 0.06708, 0.05869, 0.057346]
+optimal_y = [0.12656, 0.11854, 0.07688, 0.07231, 0.07638, 0.08475]
 
 amcl_02_x = [1, 3, 50, 100, 250, 500]
-amcl_02_y = [6.60457, 5.82019, 4.62442, 4.26470, 2.52710, 1.86035]
+amcl_02_y = [0.55304, 0.55862, 0.54471, 0.22662, 0.25815, 0.17293]
 
 
 optimal_y = [y * 100 for y in optimal_y]
@@ -28,10 +28,10 @@ plt.scatter(amcl_02_x, amcl_02_y, marker='s', color='red')
 plt.grid(True)
 # plt.gca().set_aspect('equal', adjustable='box')
 
-plt.yscale('log')
+# plt.yscale('log')
 #plt.xscale('log')
-yticks = [1, 10, 100, 1000]  # Add more values as needed
-plt.yticks(yticks, [str(val) for val in yticks])
+# yticks = [1, 10, 100, 1000]  # Add more values as needed
+# plt.yticks(yticks, [str(val) for val in yticks])
 
 
 # Adding labels and title
