@@ -1,6 +1,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
-from normal_estimation.msg import NormalList  # Import your custom message
+from normal_estimation.msg import PointsWithNormal
+from geometry_msgs.msg import Point32, Vector3
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ class LaserProcessor:
         self.normals = []
 
         # Publisher for the normals
-        self.normal_publisher = rospy.Publisher("/normals", NormalList, queue_size=10)
+        self.points_with_normals_publisher = rospy.Publisher("/points_with_normals", PointsWithNormal, queue_size=10)
 
     def callback(self, data):
         ranges = np.array(data.ranges)
@@ -24,6 +25,7 @@ class LaserProcessor:
         # Filter out invalid values (inf, nan)
         valid_indices = np.isfinite(x) & np.isfinite(y)
         self.points = np.column_stack((x[valid_indices], y[valid_indices]))
+        self.header = data.header
 
     def compute_normal(self, point, previous_point, next_point, robot_position):
         # Compute direction vectors
@@ -74,15 +76,19 @@ class LaserProcessor:
         self.publish_normals()
 
     def publish_normals(self):
-        # Create a NormalList message
-        normal_msg = NormalList()
+        # Create a PointsWithNormal message
+        points_with_normals_msg = PointsWithNormal()
 
-        # Extract x and y components of normals and populate the message
-        normal_msg.x = [normal[0] for normal in self.normals]
-        normal_msg.y = [normal[1] for normal in self.normals]
+        points_with_normals_msg.header = self.header
+
+        # Populate the message with points and normals
+        points_with_normals_msg.points_x = [point[0] for point in self.points]
+        points_with_normals_msg.points_y = [point[1] for point in self.points]
+        points_with_normals_msg.normals_x = [normal[0] for normal in self.normals]
+        points_with_normals_msg.normals_y = [normal[1] for normal in self.normals]
 
         # Publish the message
-        self.normal_publisher.publish(normal_msg)
+        self.points_with_normals_publisher.publish(points_with_normals_msg)
 
 if __name__ == '__main__':
     laser_processor = LaserProcessor()
