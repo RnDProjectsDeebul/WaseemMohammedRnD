@@ -113,46 +113,44 @@ void normalsCallback(const normal_estimation::PointsWithNormal::ConstPtr& points
     }
 }
 
-// void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
-// {
+void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
+{
 
-//     // sensor_msgs::PointCloud cloud;
-//     // projector_.projectLaser(*scan_in, cloud);
-//     tf::TransformListener listener_;
-//     if (!listener_.waitForTransform(
-//         scan_in->header.frame_id,
-//         "/base_footprint",
-//         scan_in->header.stamp + ros::Duration().fromSec(scan_in->ranges.size() * scan_in->time_increment),
-//         ros::Duration(1.0))) {
-//         return;
-//     }
-//     sensor_msgs::PointCloud cloud;
-//     projector_.transformLaserScanToPointCloud("/base_footprint", *scan_in, cloud, listener_);
+    // sensor_msgs::PointCloud cloud;
+    // projector_.projectLaser(*scan_in, cloud);
+    tf::TransformListener listener_;
+    if (!listener_.waitForTransform(
+        scan_in->header.frame_id,
+        "/base_footprint",
+        scan_in->header.stamp + ros::Duration().fromSec(scan_in->ranges.size() * scan_in->time_increment),
+        ros::Duration(1.0))) {
+        return;
+    }
+    sensor_msgs::PointCloud cloud;
+    projector_.transformLaserScanToPointCloud("/base_footprint", *scan_in, cloud, listener_);
 
 
-//     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
-//     // Convert sensor_msgs::PointCloud to pcl::PointCloud<pcl::PointXYZ>
-//     for (const auto& point : cloud.points) {
-//         pcl::PointXYZ pcl_point;
-//         pcl_point.x = point.x;
-//         pcl_point.y = point.y;
-//         pcl_point.z = point.z;  // Keep the original Z value
-//         pcl_cloud->push_back(pcl_point);
-//     }
-//     std::cout << *pcl_cloud << std::endl;
-//     // std::cout << "\npcl_cloud: " << pcl_cloud->points.size() <<"\n";
-//     publishCloud(pcl_cloud, scan_cloud_pub, scan_in->header);
-//     publishNormals(pcl_cloud, scan_in->header);
-
-// }
+    // Convert sensor_msgs::PointCloud to pcl::PointCloud<pcl::PointXYZ>
+    for (const auto& point : cloud.points) {
+        pcl::PointXYZ pcl_point;
+        pcl_point.x = point.x;
+        pcl_point.y = point.y;
+        pcl_point.z = point.z;  // Keep the original Z value
+        pcl_cloud->push_back(pcl_point);
+    }
+    std::cout << *pcl_cloud << std::endl;
+    // std::cout << "\npcl_cloud: " << pcl_cloud->points.size() <<"\n";
+    publishCloud(pcl_cloud, scan_cloud_pub, scan_in->header);
+}
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "normal_estimation_2d");
     ros::NodeHandle nh("~");
 
-    // ros::Subscriber scan_sub = nh.subscribe("/scan", 1, scanCallback);
+    ros::Subscriber scan_sub = nh.subscribe("/scan", 1, scanCallback);
     ros::Subscriber normals_sub = nh.subscribe("/points_with_normals", 1, normalsCallback);
     cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/lidar_point_normals", 1);
     scan_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/rslidar_points", 1); 
