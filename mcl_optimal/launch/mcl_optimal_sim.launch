@@ -23,6 +23,7 @@
         <remap from="/odom" to="/ground_truth_odom" />
     </node> -->
 
+    <node pkg="pcl_ros" type="pcd_to_pointcloud" name="pcd_to_pointcloud_node" args="$(arg map_file) 0.1 _frame_id:=map" output="screen"/>
     <node pkg="mcl_optimal" type="mcl_optimal_node"    name="mcl_optimal_node"    output="screen">
         <param name="map_file" value="$(arg map_file)" />
         <param name="num_particles" value="$(arg num_particles)" />
@@ -54,5 +55,8 @@
     <param name="max_pt_to_normal_ang" value="1.3" />
     < <remap from="/odom" to="/ground_truth_odom" /> this was commeneted
     </node> -->
+    
+    <node pkg="normal_estimation" type="normal_estimation_2d" name="normal_estimation_node" output="screen"/>
+    <node pkg="normal_estimation" type="normal.py" name="normal_node" output="screen"/>
 
 </launch>

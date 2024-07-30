@@ -14,7 +14,6 @@ laser_geometry::LaserProjection projector_;
 ros::Publisher cloud_pub;
 ros::Publisher scan_cloud_pub;
 
-
 template<typename T>
 void publishCloud(T& cloud, ros::Publisher& publisher, std_msgs::Header header){
     sensor_msgs::PointCloud2 output;
@@ -47,26 +46,27 @@ void publishCloud(T& cloud, ros::Publisher& publisher, std_msgs::Header header){
 void normalsCallback(const normal_estimation::PointsWithNormal::ConstPtr& points_with_normal_msg)  {
     // Clear previous normals
     // cloud_normals->clear();
-    tf::TransformListener listener;
-    tf::StampedTransform transform;
+    // tf::TransformListener listener;
+    // tf::StampedTransform transform;
 
-    try {
-        // Wait for the transform from /points_with_normals frame to /base_footprint frame
-        listener.waitForTransform("/base_footprint", points_with_normal_msg->header.frame_id,
-                                   points_with_normal_msg->header.stamp, ros::Duration(1.0));
-        listener.lookupTransform("/base_footprint", points_with_normal_msg->header.frame_id,
-                                  points_with_normal_msg->header.stamp, transform);
-    } catch (tf::TransformException ex) {
-        ROS_ERROR("%s",ex.what());
-        return;
-    }
+    // try {
+    //     // Wait for the transform from /points_with_normals frame to /base_footprint frame
+    //     listener.waitForTransform("/base_link", points_with_normal_msg->header.frame_id,
+    //                                ros::Time(0), ros::Duration(1.0));
+    //     listener.lookupTransform("/base_link", points_with_normal_msg->header.frame_id,
+    //                               ros::Time(0), transform);
+
+    // } catch (tf::TransformException ex) {
+    //     ROS_ERROR("%s",ex.what());
+    //     return;
+    // }
 
     sensor_msgs::PointCloud transformed_cloud;
 
     // Transform each point in the cloud
     for (size_t i = 0; i < points_with_normal_msg->points_x.size(); ++i) {
         tf::Point pt(points_with_normal_msg->points_x[i], points_with_normal_msg->points_y[i], 0.0); // Z value assumed to be 0
-        tf::Point pt_transformed = transform * pt;
+        tf::Point pt_transformed = pt; //transform * pt;
         
         // Add the transformed point to the new cloud
         geometry_msgs::Point32 transformed_point;
@@ -115,19 +115,38 @@ void normalsCallback(const normal_estimation::PointsWithNormal::ConstPtr& points
 
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
-
-    // sensor_msgs::PointCloud cloud;
-    // projector_.projectLaser(*scan_in, cloud);
     tf::TransformListener listener_;
-    if (!listener_.waitForTransform(
-        scan_in->header.frame_id,
-        "/base_footprint",
-        scan_in->header.stamp + ros::Duration().fromSec(scan_in->ranges.size() * scan_in->time_increment),
-        ros::Duration(1.0))) {
-        return;
-    }
-    sensor_msgs::PointCloud cloud;
-    projector_.transformLaserScanToPointCloud("/base_footprint", *scan_in, cloud, listener_);
+
+            sensor_msgs::PointCloud cloud;
+        try {
+            ros::Time scan_time = ros::Time::now();
+            // Wait for the transform to become available
+            // if (!listener_.waitForTransform("base_link", "base_laser", scan_time, ros::Duration(2.0))) {
+            //     ROS_WARN_STREAM("Timeout waiting for transform from " << scan_in->header.frame_id << " to /base_link");
+            //     return;
+            // }
+                // projector_.transformLaserScanToPointCloud("/base_link", *scan_in, cloud, listener_);
+                projector_.projectLaser(*scan_in, cloud);
+
+
+            
+        } catch (tf::TransformException& ex) {
+            ROS_WARN_STREAM("Transform exception: " << ex.what());
+        }
+    // std::cout << scan_in->header.stamp + ros::Duration().fromSec(scan_in->ranges.size() * scan_in->time_increment) << std::endl;
+
+
+    // tf::TransformListener listener_;
+
+    // if (!listener_.waitForTransform("/base_link", scan_in->header.frame_id,
+    //                                ros::Time(0), ros::Duration(1.0))) {  // Increased timeout duration to 5 seconds
+    //     ROS_WARN("Could not get transform from %s to /base_link within 5 seconds", scan_in->header.frame_id.c_str());
+    //     return;
+    // }
+
+    // std::cout << cloud << std::endl;
+    // sensor_msgs::PointCloud cloud;
+    // projector_.transformLaserScanToPointCloud("/base_link", *scan_in, cloud, listener_);
 
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -150,9 +169,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "normal_estimation_2d");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber scan_sub = nh.subscribe("/scan", 1, scanCallback);
+    ros::Subscriber scan_sub = nh.subscribe("/scan", 1000, scanCallback);
     ros::Subscriber normals_sub = nh.subscribe("/points_with_normals", 1, normalsCallback);
-    cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/lidar_point_normals", 1);
+    cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/laser_cloud_normals", 1);
     scan_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/rslidar_points", 1); 
 
     ros::spin();

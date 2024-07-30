@@ -1,10 +1,8 @@
+#!/usr/bin/env python3
 import rospy
 from sensor_msgs.msg import LaserScan
 from normal_estimation.msg import PointsWithNormal
-from geometry_msgs.msg import Point32, Vector3
 import numpy as np
-from sklearn.neighbors import NearestNeighbors
-import matplotlib.pyplot as plt
 
 class LaserProcessor:
     def __init__(self):
@@ -58,16 +56,33 @@ class LaserProcessor:
         self.normals = []
 
         # Iterate over points and their neighbors
-        for i, point in enumerate(self.points):
-            # Ensure indices are within the valid range
-            prev_index = max(0, i - 1)
-            next_index = min(len(self.points) - 1, i + 1)
+        # for i, point in enumerate(self.points):
 
-            previous_point = self.points[prev_index]
-            next_point = self.points[next_index]
+        # n = len(self.points) - 10
+
+        for i in range((len(self.points) - 10)):
+
+            prev_index = (i - 1) % (len(self.points) - 10)
+            next_index = (i + 1) % (len(self.points) - 10)
+
+            if prev_index < 0 or prev_index >= (len(self.points) - 10):
+                previous = None
+            else:
+                previous = self.points[prev_index]
+                
+            if next_index < 0 or next_index >= (len(self.points) - 10):
+                next = None
+            else:
+                next = self.points[next_index]
+
+            print(f"i: {i}, prev_index: {prev_index}, next_index: {next_index}, len(self.points): {len(self.points)}, len -3: {len(self.points) - 10}")
+
+
+            previous_point = self.points[prev_index-10]
+            next_point = self.points[next_index-10]
 
             # Compute the normal at the current point
-            normal = self.compute_normal(point, previous_point, next_point, robot_position)
+            normal = self.compute_normal(self.points[i-10], previous_point, next_point, robot_position)
 
             # Append the computed normal to the list
             self.normals.append(normal)
@@ -95,4 +110,4 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)  # Adjust the rate according to your data publishing rate
     while not rospy.is_shutdown():
         laser_processor.process_points()
-        rate.sleep()
+        # rate.sleep()

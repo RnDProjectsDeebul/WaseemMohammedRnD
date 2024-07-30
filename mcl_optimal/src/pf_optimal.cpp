@@ -5,6 +5,13 @@
 #include <algorithm>
 #include <stdlib.h>
 
+
+// time computation
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <vector>
+
 using Gaussian = std::normal_distribution<float>;
 
 Eigen::Vector3f sampleZeroMean3DGaussian(Eigen::Matrix3f cov, std::default_random_engine &generator) {
@@ -55,6 +62,9 @@ void OptimalParticleFilter::setNewOdom(uint64_t new_odom_timestamp, Eigen::Vecto
 }
 
 void OptimalParticleFilter::filter(PointCloudNormal::Ptr cloud) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<double>> particle_computation_times(num_particles_);
+
     Eigen::Vector3f motion_trans = motion_model_->getTranslation();
     Eigen::Quaternionf motion_rot = motion_model_->getRotation();
     Eigen::Matrix3d motion_noise_cov = motion_model_->getAccumulatedMotionNoiseCovariance().cast<double>();
@@ -63,6 +73,7 @@ void OptimalParticleFilter::filter(PointCloudNormal::Ptr cloud) {
     observation_model_->setInputCloud(cloud);
     std::vector<float> particle_log_likelihoods(num_particles_);
     for (size_t i=0; i < num_particles_; i++){
+        auto particle_start_time = std::chrono::high_resolution_clock::now();
         particles_[i].updateState(motion_trans, motion_rot);
     
         Eigen::Vector3d om_dist_mean;
@@ -93,6 +104,14 @@ void OptimalParticleFilter::filter(PointCloudNormal::Ptr cloud) {
         float particle_log_likelihood = om_log_likelihood_factor + om_log_likelihood_of_particle + mm_log_likelihood_of_particle 
                                         - log(1/sqrt(8*pow(M_PI,3)*lf_proposal_distribution_cov.determinant()));  
         particle_log_likelihoods[i] = particle_log_likelihood;
+        // Record end time for each particle
+        auto particle_end_time = std::chrono::high_resolution_clock::now();
+
+        // Calculate elapsed time for the particle
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(particle_end_time - particle_start_time).count();
+
+        // Store the elapsed time for the particle
+        particle_computation_times[i].push_back(elapsed_time);
     }
 
     //////////////////////////// SET WEIGHTS ////////////////////////////////////////
@@ -130,7 +149,32 @@ void OptimalParticleFilter::filter(PointCloudNormal::Ptr cloud) {
             }
         }
         random_prob += 1.0/num_particles_;
-    }  
+    }
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+
+    // Calculate total elapsed time for the filter function
+    auto total_elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    std::cout << "Total computation time for the filter function: " << total_elapsed_time << " milliseconds" << std::endl;
+
+    /// Write computation times to a CSV file
+    std::string filename = "/home/waseem/Documents/HBRS/RnD/catkin_ws/particle_computation_times.csv";
+    std::ofstream outfile(filename, std::ios::app); // Open in append mode
+    if (outfile.is_open()) {
+        // Write computation times for each particle as a new row
+        for (size_t col = 0; col < num_particles_; ++col) {
+            outfile << particle_computation_times[col][0]; // Assuming only one computation time per particle
+            if (col != num_particles_ - 1) {
+                outfile << ",";
+            }
+        }
+        outfile << "\n";
+
+        outfile.close();
+        std::cout << "Computation times appended to " << filename << std::endl;
+    } else {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+    }
     particles_ = new_particles; 
 }
 
