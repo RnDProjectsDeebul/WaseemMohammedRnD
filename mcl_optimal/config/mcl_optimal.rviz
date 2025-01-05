@@ -5,14 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /TF1
+        - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /PointCloud22
         - /PoseWithCovariance1/Covariance1
         - /PoseWithCovariance1/Covariance1/Position1
-        - /PoseArray1
-        - /PointCloud23
         - /Odometry1/Shape1
       Splitter Ratio: 0.5
     Tree Height: 892
@@ -77,7 +74,7 @@ Visualization Manager:
         imu_link:
           Value: false
         map:
-          Value: false
+          Value: true
         odom:
           Value: false
         rslidar:
@@ -287,6 +284,23 @@ Visualization Manager:
       Topic: /ground_truth_pose
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
+      Name: PoseArray
+      Queue Size: 10
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (Flat)
+      Topic: /mcl_optimal_node/particles
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 50; 50; 50
@@ -315,7 +329,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.692846298217773
+      Distance: 29.228504180908203
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -323,17 +337,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.9523721933364868
-        Y: 0.9876416921615601
+        X: -8.41868782043457
+        Y: 7.090727806091309
         Z: 0
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4997963905334473
+      Pitch: 1.5697963237762451
       Target Frame: map
-      Yaw: 1.8303985595703125
+      Yaw: 1.8553978204727173
     Saved: ~
 Window Geometry:
   Displays:
@@ -352,4 +366,4 @@ Window Geometry:
     collapsed: false
   Width: 960
   X: 0
-  Y: 0
+  Y: 27

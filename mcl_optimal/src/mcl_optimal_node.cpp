@@ -145,7 +145,7 @@ int main (int argc, char** argv) {
  
     ros::Subscriber init_pose_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1, boost::bind(initPoseCb, _1, boost::ref(pf_optimal)));
     ros::Subscriber odom_sub = nh.subscribe<nav_msgs::Odometry>("/odom", 10, boost::bind(odomCb, _1, boost::ref(pf_optimal)));    
-    ros::Subscriber cloud_sub = nh.subscribe<sensor_msgs::PointCloud2> ("/lidar_point_normals", 1, boost::bind(cloudCb, _1, boost::ref(pf_optimal)));
+    ros::Subscriber cloud_sub = nh.subscribe<sensor_msgs::PointCloud2> ("/laser_cloud_normals", 1, boost::bind(cloudCb, _1, boost::ref(pf_optimal)));
     robot_pose_pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped> ("/robot_pose", 1, true); 
     particles_pub = nh.advertise<geometry_msgs::PoseArray> ("particles", 1, true);
     map_frame_downsampled_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/map_frame_downsampled_cloud", 1);  
