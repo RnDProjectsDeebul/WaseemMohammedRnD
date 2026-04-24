@@ -19,8 +19,8 @@ void ObservationModel::setInputCloud(PointCloudNormal::Ptr cloud) {
     input_cloud_.reset(new PointCloudNormal ());
     for (size_t i=0; i < cloud->points.size(); i++) {
         PointNormal pt = cloud->points[i];
-        if (std::isfinite(pt.x) && std::isfinite(pt.y) && std::isfinite(pt.z) && std::isfinite(pt.normal_x) 
-            && std::isfinite(pt.normal_y) && std::isfinite(pt.normal_z)) {
+        if (std::isfinite(pt.x) && std::isfinite(pt.y) && std::isfinite(pt.normal_x) 
+            && std::isfinite(pt.normal_y)) {
             input_cloud_->points.push_back(cloud->points[i]);
         }
     }
@@ -115,26 +115,15 @@ void ObservationModel::initializeMapClouds(PointCloudNormal::Ptr map_cloud) {
 
     for (size_t i = 0; i < map_cloud->points.size(); i++){
         PointNormal pt = map_cloud->points[i];
-        if (fabs(pt.normal_z) < 0.1){                   // <6deg tilt/pitch
-            pt.curvature = pt.x*pt.normal_x + pt.y*pt.normal_y + pt.z*pt.normal_z;
-            if (pt.normal_x > 0.5){ pos_x_map_cloud_->points.push_back(pt); }
-            if (pt.normal_x < -0.5){ neg_x_map_cloud_->points.push_back(pt); }
-            if (pt.normal_y > 0.5){ pos_y_map_cloud_->points.push_back(pt); }
-            if (pt.normal_y < -0.5){ neg_y_map_cloud_->points.push_back(pt); }
+        //if (fabs(pt.normal_z) < 0.1){                   // <6deg tilt/pitch
+        if (std::isfinite(pt.normal_z)) {
+            pt.curvature = pt.x*pt.normal_x + pt.y*pt.normal_y; // + pt.z*pt.normal_z;
+            pos_x_map_cloud_->points.push_back(pt);
         }
     }
     std::cout << "pos_x_map_cloud_: " << pos_x_map_cloud_->points.size() << std::endl;
-    std::cout << "neg_x_map_cloud_: " << neg_x_map_cloud_->points.size() << std::endl;
-    std::cout << "pos_y_map_cloud_: " << pos_y_map_cloud_->points.size() << std::endl;
-    std::cout << "neg_y_map_cloud_: " << neg_y_map_cloud_->points.size() << std::endl;
     pos_x_map_octree_.setInputCloud(pos_x_map_cloud_);
     pos_x_map_octree_.addPointsFromInputCloud();
-    neg_x_map_octree_.setInputCloud(neg_x_map_cloud_);
-    neg_x_map_octree_.addPointsFromInputCloud();
-    pos_y_map_octree_.setInputCloud(pos_y_map_cloud_);
-    pos_y_map_octree_.addPointsFromInputCloud();
-    neg_y_map_octree_.setInputCloud(neg_y_map_cloud_);
-    neg_y_map_octree_.addPointsFromInputCloud();  
 }
 
 void ObservationModel::computeAndAddCorrespondence(PointNormal& scan_pt, PointNormal& scan_pt_transformed, OctreeNormal& octree_map
@@ -144,10 +133,10 @@ void ObservationModel::computeAndAddCorrespondence(PointNormal& scan_pt, PointNo
     octree_map.approxNearestSearch(scan_pt_transformed, nn_pt_id, nn_sqr_dist);
     if (nn_sqr_dist < max_nn_sqr_dist_){
         PointNormal map_pt = map_cloud->points[nn_pt_id];
-        float cos_normal_ang = scan_pt_transformed.normal_x*map_pt.normal_x + scan_pt_transformed.normal_y*map_pt.normal_y + scan_pt_transformed.normal_z*map_pt.normal_z;
+         float cos_normal_ang = scan_pt_transformed.normal_x*map_pt.normal_x + scan_pt_transformed.normal_y*map_pt.normal_y;// + scan_pt_transformed.normal_z*map_pt.normal_z;
         if (cos_normal_ang > min_cos_nn_normal_angle_diff_) { 
             float scan_pt_dist = sqrt(scan_pt.x * scan_pt.x + scan_pt.y * scan_pt.y); 
-            bool reliable_for_yaw_estimation = fabs((scan_pt.x * scan_pt.normal_x + scan_pt.y * scan_pt.normal_y)/scan_pt_dist) < 0.98; // If ang > 0.2rad
+            bool reliable_for_yaw_estimation = fabs((scan_pt.x * scan_pt.normal_x + scan_pt.y * scan_pt.normal_y)/scan_pt_dist) < 1.398; // If ang > 0.2rad
             correspondences.push_back(Correspondence{scan_pt, scan_pt_transformed, map_pt, reliable_for_yaw_estimation}); 
         }
     }
@@ -157,20 +146,8 @@ void ObservationModel::getCorrespondences(PointCloudNormal::Ptr cloud, PointClou
     for (size_t i = 0; i < transformed_cloud->points.size(); i++){
         PointNormal scan_pt = cloud->points[i];
         PointNormal scan_pt_transformed = transformed_cloud->points[i];
-        if (std::isfinite(scan_pt_transformed.x) && fabs(scan_pt_transformed.normal_z) < 0.1){
-            if (fabs(scan_pt_transformed.normal_x) > fabs(scan_pt_transformed.normal_y)){
-                if (scan_pt_transformed.normal_x > 0){
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
-                } else {
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, neg_x_map_octree_, neg_x_map_cloud_, correspondences);
-                }
-            } else {
-                if (scan_pt_transformed.normal_y > 0){
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_y_map_octree_, pos_y_map_cloud_, correspondences);
-                } else {
-                    computeAndAddCorrespondence(scan_pt, scan_pt_transformed, neg_y_map_octree_, neg_y_map_cloud_, correspondences);
-                }
-            }
+        if (std::isfinite(scan_pt_transformed.x) && std::isfinite(scan_pt_transformed.normal_z)){
+            computeAndAddCorrespondence(scan_pt, scan_pt_transformed, pos_x_map_octree_, pos_x_map_cloud_, correspondences);
         }
     }
 }
